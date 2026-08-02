@@ -1,0 +1,34 @@
+# Modelos reais, quantizados GGUF Q4_K_M, testáveis via llama-cpp-python no Termux.
+# RAM estimada = peso do arquivo + overhead de contexto (ctx=2048) + runtime do llama.cpp.
+# Nenhum destes numeros e comparavel ao ranking do Akita (esses modelos nao competem
+# com Claude/GPT/Kimi em engenharia de software completa).
+
+models:
+  qwen05:
+    repo: "Qwen/Qwen2.5-0.5B-Instruct-GGUF"
+    file: "qwen2.5-0.5b-instruct-q4_k_m.gguf"
+    ram_estimate_mb: 550
+    ctx: 2048
+    threads: 4
+    role: "tarefas curtas: classificacao, extracao, respostas de 1 linha"
+
+  qwen15:
+    repo: "Qwen/Qwen2.5-1.5B-Instruct-GGUF"
+    file: "qwen2.5-1.5b-instruct-q4_k_m.gguf"
+    ram_estimate_mb: 1300
+    ctx: 2048
+    threads: 4
+    role: "geracao de codigo curto, resumo, structured output"
+
+  gemma2b:
+    repo: "google/gemma-2-2b-it-GGUF"
+    file: "gemma-2-2b-it-q4_k_m.gguf"
+    ram_estimate_mb: 2000
+    ctx: 2048
+    threads: 4
+    role: "raciocinio um pouco mais longo, self-review"
+
+# Regra do harness: nunca mais de um modelo carregado ao mesmo tempo,
+# a menos que ram_estimate_mb combinada dos ativos seja < 2500 (margem
+# de seguranca para variantes de 4GB de RAM).
+max_concurrent_ram_mb: 2500
