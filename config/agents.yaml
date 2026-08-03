@@ -103,12 +103,12 @@ agents:
     task: security
 
   - id: "self-review-pass"
-    model: gemma2b
+    model: qwen3b
     system_prompt: "Voce revisa seu proprio trabalho anterior e marca cada objetivo como PASS, PARTIAL ou FAIL, citando o motivo."
     task: self_review
 
   - id: "self-review-honesty-check"
-    model: gemma2b
+    model: qwen3b
     system_prompt: "Voce verifica se uma auto-revisao esta sendo honesta ou esta inflando os proprios resultados."
     task: self_review
 

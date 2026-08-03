@@ -12,7 +12,7 @@ Pontuacao por tarefa (0-100):
 MIN_ACCEPTABLE_TOK_PER_S = {
     "qwen05": 8.0,
     "qwen15": 4.0,
-    "gemma2b": 2.5,
+    "qwen3b": 2.0,
 }
 
 TIERS = [
