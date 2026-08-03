@@ -3,13 +3,12 @@
 Harness real para rodar GGUF quantizados via llama-cpp-python no Termux/A23.
 Sem NPU, sem TFLite fantasioso, sem MoE onde nao existe MoE.
 Carrega um modelo por vez (ou combinacao que caiba em max_concurrent_ram_mb),
-mede tokens/s e RSS de memoria de verdade via psutil.
+mede tokens/s e RSS de memoria de verdade via /proc/self/status.
 """
 
 import os
 import time
 import yaml
-import psutil
 from pathlib import Path
 from typing import Optional
 
@@ -41,7 +40,18 @@ class LocalHarness:
                   "Instale com: pip install llama-cpp-python --break-system-packages")
 
     def _process_rss_mb(self) -> float:
-        return psutil.Process(os.getpid()).memory_info().rss / (1024 * 1024)
+        """Le VmRSS de /proc/self/status. Funciona no Termux porque o kernel
+        Linux por baixo do Android expoe /proc normalmente, mesmo sem psutil
+        (que nao compila em Android)."""
+        try:
+            with open("/proc/self/status") as f:
+                for line in f:
+                    if line.startswith("VmRSS:"):
+                        kb = int(line.split()[1])
+                        return kb / 1024
+        except (FileNotFoundError, PermissionError, IndexError, ValueError):
+            pass
+        return 0.0
 
     def _current_loaded_ram_mb(self) -> int:
         return sum(self.models_cfg[m]["ram_estimate_mb"] for m in self._loaded)
@@ -65,7 +75,7 @@ class LocalHarness:
         model_path = self.model_dir / cfg["file"]
         if not model_path.exists():
             raise FileNotFoundError(
-                f"{model_path} nao encontrado. Rode scripts/download_models.sh primeiro."
+                f"{model_path} nao encontrado. Rode scripts/download_models.py primeiro."
             )
 
         if not LLAMA_CPP_AVAILABLE:
@@ -89,7 +99,8 @@ class LocalHarness:
         model_id = agent["model"]
         llm = self.load_model(model_id)
 
-        full_prompt = f"<system>\n{agent['system_prompt']}\n</system>\n<user>\n{user_prompt}\n</user>\n"
+        system_prompt = agent["system_prompt"]
+        full_prompt = f"<system>\n{system_prompt}\n</system>\n<user>\n{user_prompt}\n</user>\n"
 
         rss_before = self._process_rss_mb()
         start = time.time()
